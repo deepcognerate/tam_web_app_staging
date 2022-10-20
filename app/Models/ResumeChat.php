@@ -22,7 +22,7 @@ class ResumeChat extends Model
         'id',
         'status',
         'user_id',
-        'counsellor_id',
+        'session_id',
     ];
 
 

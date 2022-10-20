@@ -27,6 +27,7 @@ class ChatSessions extends Model
         'category_id',
         'chat_type',
         'assign_by',
+        'escalated_status',
         'escalated_reason',
         'escalated_by',
         'timer_status',
@@ -36,6 +37,7 @@ class ChatSessions extends Model
         'close_reason',
         'close_remark',
         'close_issue_code',
+
         'feedback_comment',
         'feedback_star_reviews'
     ];

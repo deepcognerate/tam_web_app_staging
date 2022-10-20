@@ -104,7 +104,8 @@ class CounselorAssignmentApiController extends Controller
             $checkCounselorAssignment = AsyncChatSessions::where('session_id',$request->session_id)
                                                 ->where(function($qq){
                                                     $qq->orWhere('chat_current_status','1');
-                                                    $qq->orWhere('chat_current_status','2');          
+                                                    $qq->orWhere('chat_current_status','2'); 
+                                                    $qq->orWhere('chat_current_status','4');          
                                                 })
                                                 ->first();
                        
@@ -136,7 +137,7 @@ class CounselorAssignmentApiController extends Controller
                                       
                 $chats = AsyncChatMessages::where('session_id',$checkCounselorAssignment->session_id)->get();
 
-                $response = ['response' => $chats,'notification' => $data,'message'=> 'message send successfully.....!','status'=>true];
+                $response = ['response' => $chats,'notification' => $data,'message'=> 'message send successfully.....!','status'=>true,'imgUrl'=>url('/public/chatAttachment/').'/'];
             } else {
                 $chats = [];
                 $data = [];

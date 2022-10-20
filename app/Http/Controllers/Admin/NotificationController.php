@@ -5,7 +5,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\FcmToken;
 use Auth;
-use App\Models\FcmCaredentials;
 
 class NotificationController extends Controller
 {
@@ -19,8 +18,7 @@ class NotificationController extends Controller
         $getFcmTokens = FcmToken::where('user_id', $request->user_id)->first();
         return response()->json($getFcmTokens);
     }
-    
-
+  
     public function storeToken(Request $request)
     {        
         $sessionCounselorid = Auth::user()->id;
@@ -38,7 +36,7 @@ class NotificationController extends Controller
         $url = 'https://fcm.googleapis.com/fcm/send';
         $FcmToken = FcmToken::where('user_id',$sessionCounselorid)->whereNotNull('fcm_token')->pluck('fcm_token')->all();
        
-        $serverKey = FcmCaredentials::fcmKey();
+        $serverKey = 'AAAA0yAqXOY:APA91bFx-9he2tSBX8bwjlnBHik0i-f_NhgsgaElzQQ0xDbefryv9G2dwAj0J-6lBhcMt14PWhIb0AfHXvaaW-V2NkE2rgTeLXDf5pbpAqvmmvvoVpYo73GfPsk4tYQo26s0c6p1pjLY';
   
         $data = [
             "registration_ids" => $FcmToken,

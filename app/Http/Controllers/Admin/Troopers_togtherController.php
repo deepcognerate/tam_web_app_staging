@@ -104,7 +104,7 @@ class Troopers_togtherController extends Controller
             }
 
             $multycounselor = $request->counselor_id;
-            if($multycounselor){
+            if(!empty($multycounselor)){
                 foreach ($multycounselor as $value) {
                   $multyfeature = array();
                   $multyfeature['counselor_id'] = $value;

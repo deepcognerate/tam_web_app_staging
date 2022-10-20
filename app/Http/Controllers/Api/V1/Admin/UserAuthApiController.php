@@ -44,20 +44,30 @@ class UserAuthApiController extends Controller
 
     
     public function register(Request $request) 
-    {
+    {   
+        if(isset($request->name) AND !empty($request->name)){
+            $checkUserName = User::where(DB::raw('lower(name)'), 'like', '%' . strtolower($request->name) . '%')->where('id','!=',$request->user_id)->first();
+
+
+            if(!empty($checkUserName)) {
+                $response = ["message" => "This user name already registered....!",'status'=>FALSE];
+                return response($response, 422);
+            }
+        }
+
         if(!empty($request->phone_no))
         {
             $checkUserMobileNo = User::where('phone_no',$request->phone_no)->where('status','0')->first();
             if(!empty($checkUserMobileNo))
             {
-                $response = ['token' => $checkUserMobileNo,"message" => "Mobile Number Already Registred.....!",'status'=>FALSE];
+                $response = ['token' => $checkUserMobileNo,"message" => "Mobile Number Already Registered.....!",'status'=>FALSE];
                 return response($response, 422);
             }
             else{
                     $checkUserEmail = User::where('email',$request->email)->where('status','0')->first();
                     if(!empty($checkUserEmail))
                     {
-                        $response = ['token' => $checkUserEmail,"message" => "Email id Already Registerd....!",'status'=>FALSE];
+                        $response = ['token' => $checkUserEmail,"message" => "Email id Already Registered....!",'status'=>FALSE];
                         return response($response, 422);
                     }
                     else
@@ -69,11 +79,11 @@ class UserAuthApiController extends Controller
                         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
                     }
                 }
-        }else{
+        } else {
                 $checkUserEmail = User::where('email',$request->email)->where('status','0')->first();
                 if(!empty($checkUserEmail))
                 {
-                    $response = ['token' => $checkUserEmail,"message" => "Email id Already Registerd....!",'status'=>FALSE];
+                    $response = ['token' => $checkUserEmail,"message" => "Email id Already Registered....!",'status'=>FALSE];
                     return response($response, 422);
                 }
                 else{
@@ -120,7 +130,7 @@ class UserAuthApiController extends Controller
             $checkUserName = User::where('name',$request->name)->first();
 
             if(!empty($checkUserName)) {
-                $response = ["message" => "This User Name Already Registerd....!",'status'=>FALSE];
+                $response = ["message" => "This user name already registered....!",'status'=>FALSE];
                     return response($response, 422);
             }
             

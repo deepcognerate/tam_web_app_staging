@@ -279,7 +279,7 @@
 
         apiKey: "AIzaSyAADXQHgQTNgBFZyCjDsV3W6Z7oc9B1B2g",
         authDomain: "tam-app-staging.firebaseapp.com",
-        databaseURL: 'https://auth-db206.hstgr.io/index.php?db=u789638131_tam_destress',
+        databaseURL: 'https://counsellor.theablemind.com/phpmyadmin/index.php?route=/database/structure&db=tam_web_staging',
         projectId: "tam-app-staging",
         storageBucket: "tam-app-staging.appspot.com",
         messagingSenderId: "991731337312",

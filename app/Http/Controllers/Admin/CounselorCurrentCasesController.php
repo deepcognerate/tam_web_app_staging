@@ -45,6 +45,11 @@ use Illuminate\Support\Facades\Log;
 
 class CounselorCurrentCasesController extends Controller
 {   
+   
+
+        public function FcmServerKey(){
+             return FcmCaredentials::fcmKey();
+        }
 
     
         public function index(Request $request)
@@ -95,90 +100,52 @@ class CounselorCurrentCasesController extends Controller
 
 
 
-        
-        public function counselorAssignUserAdmin($userId)
+          public function counselorAssignUserAdmin($sessionId)
         {
 
             $sessionCounselorid = Auth::user()->id;
+            $counselors = User::where('id',$sessionCounselorid)->where('status','2')->whereNull('deleted_at')->first();
+            $getchats = AsyncChatSessions::where('session_id',$sessionId)
+                                            ->where('chat_current_status','4')
+                                            ->where('chat_type','2')
+                                            ->first();
+            if(!empty($getchats)) { 
+                $ChatAssignment = AsyncChatSessions::where('user_id',$getchats->user_id)
+                                        ->where('category_id',$getchats->category_id)
+                                        ->where('chat_type','2')
+                                        ->get();
 
-            $counselors = User::where('id',$sessionCounselorid)->where('status','1')->whereNull('deleted_at')->first();
+                AsyncChatSessions::where('session_id', $sessionId)->update(['assign_by' => $sessionCounselorid]);
 
-            $counselorAssignToUsers = CounselorCategoryUser::where('user_id',$userId)
-                                                    ->where('counselor_id',$counselors->id)
-                                                    ->whereNull('deleted_at')
-                                                    ->first();
-
-            $currentCounselors = CounselorCurrentCases::where('user_id',$userId)
-                                                    ->where('category_id',$counselorAssignToUsers->category_id)
-                                                    ->where('chat_type',0)
-                                                    ->where('admin_assign',0)
-                                                    ->whereNull('deleted_at')
-                                                    ->first();
-
-            $asyncChats = array();
-            if(!empty( $counselorAssignToUsers))
-            {
-                $asyncChats = DB::select("SELECT * FROM `async_chat` WHERE `category_id` = ".$counselorAssignToUsers->category_id." AND (`sender_id` = $userId OR `reciver_id` = $userId) ORDER BY `date`,`time` ASC");
-
-                
-
-
-                if(!empty(count($asyncChats))){
-                    foreach($asyncChats as $msg){
-                        if($msg->read_status == 0){
-                            $idd = $msg->id;
-                            DB::table('async_chat')->where('id', $idd)->update(['read_status' => 1]);
-                        }
+                    $asyncChats = array();
+                    if(!empty($ChatAssignment)) {   
+                        $asyncChats = AsyncChatMessages::where(function($q) use($ChatAssignment){
+                                    if(!empty($ChatAssignment)){
+                                        foreach ($ChatAssignment as $key => $value) {
+                                            $q->orWhere('session_id',$value->session_id);
+                                        }                    
+                                    }
+                        })->get();
                     }
-                }
-            }
-            else
-            {
-                $counselorAssigntoUser = array();
-                $counselorAssigntoUser['counselor_id'] = $counselors->id;
-                $counselorAssigntoUser['user_id'] = $currentCounselors->user_id;
-                $counselorAssigntoUser['category_id'] = $currentCounselors->category_id;
-                $counselorAssigntoUser['activate_chat'] = 1;
-                $counselorAssignToUsers = CounselorCategoryUser::create($counselorAssigntoUser);
 
-                $chekUserCurrentMessages =  CurrentUserMessage::where('current_chat_id', $currentCounselors->id)
-                                                                ->get();                   
-                foreach($chekUserCurrentMessages as $chekUserCurrentMessage)
-                {
-                    $chat = array();
-                    $chat['counselor_category_by_user_id'] = $counselorAssignToUsers->id;
-                    $chat['category_id'] = $chekUserCurrentMessage->category_id;
-                    $chat['sender_id'] = $chekUserCurrentMessage->user_id;
-                    $chat['reciver_id'] = $counselorAssignToUsers->counselor_id;
-                    $chat['message'] = $chekUserCurrentMessage->message;
-                    $chat['status'] = 1;
-                    $chat['date'] = date("Y-m-d");
-                    $chat['time'] = date("H:i:s");
-                    $chat['labels'] = "user sender";
-                    $chat['created_at'] = date("Y-m-d H:i:s");
-                    $chat['updated_at'] = date("Y-m-d H:i:s");
-                    $chats = AsyncChat::create($chat);
-                }
+                    $currentChat = AsyncChatMessages::where('session_id',$sessionId)->get();
+                   
 
-                $counselorAssignToUser = CounselorCategoryUser::where('user_id',$userId)
-                                                                ->where('counselor_id',$counselors->id)
-                                                                ->whereNull('deleted_at')
-                                                                ->first();
 
-                $asyncChats = DB::select("SELECT * FROM `async_chat` WHERE `category_id` = ".$counselorAssignToUser->category_id." AND (`sender_id` = $userId OR `reciver_id` = $userId) ORDER BY `date`,`time` ASC");
-                if(!empty(count($asyncChats))){
-                    foreach($asyncChats as $msg){
-                        if($msg->read_status == 0){
-                            $idd = $msg->id;
-                            DB::table('async_chat')->where('id', $idd)->update(['read_status' => 1]);
-                        }
+                    if(!empty($currentChat)){
+                        AsyncChatMessages::where('session_id', $sessionId)
+                                            ->update(['read_status' => 1]); 
                     }
-                }
-            }         
+ 
+                $user_details = User::where('id',$getchats->user_id)->where('status','0')->whereNull('deleted_at')->first();
 
-            return view('admin.chatboat.admin.asyncchat',compact('counselorAssignToUsers','asyncChats')); 
+            // return view('admin.chatboat.asyncchat',compact('getchats','asyncChats','user_details'));
+             return view('admin.chatboat.admin.asyncchat',compact('getchats','user_details','asyncChats')); 
+
+            } else {
+                 return redirect()->route('admin.counselor.mychatAdmin')->with('error','Session id not valid. Try  Again later');  
+            }            
         }
-
 
     public function counselorAssignUser($sessionId)
         {
@@ -292,17 +259,28 @@ class CounselorCurrentCasesController extends Controller
 
             if(!empty($counselors) AND $counselors->status == '1') {                
                 $getLiveChats = ChatSessions::where('session_id',$sessionId)
-                                            ->where('chat_current_status','5')
                                             ->where('chat_type','1')
                                             ->first();
 
-                $userData = User::where('id',$getLiveChats->user_id)->where('status','0')->first();
+                
                 if(!empty($getLiveChats)) {                    
+                    $userData = User::where('id',$getLiveChats->user_id)->where('status','0')->first();
 
                     if($getLiveChats->chat_current_status =='5'){
                          $key_ = "live_counsellor_assign";
                          $body_ = 'Your chat with The Able Mind is now active';
                          FcmCaredentials::sendNotificationtoUser($getLiveChats->user_id,$getLiveChats->counsellor_id,$key_,$body_);
+                         ChatSessions::where('session_id', $sessionId)->update(['escalated_status' => 2]);
+                    } else {
+
+                        $ChatAudit11 = array();
+                        $ChatAudit11['session_id'] = $sessionId;
+                        $ChatAudit11['chat_status_old'] = $getLiveChats->chat_current_status;
+                        $ChatAudit11['chat_status_new'] = "3";
+                        $ChatAudit11['changed_by'] = $sessionCounselorid;
+                        ChatAudit::create($ChatAudit11);
+                        ChatSessions::where('session_id', $sessionId)->update(['chat_current_status' => 3]);
+
                     }
 
                     $liveChats = ChatMessages::where('session_id',$sessionId)->get();
@@ -328,14 +306,7 @@ class CounselorCurrentCasesController extends Controller
 
 
 
-                if(!empty($getLiveChats)) {  
-
-                    if($getLiveChats->chat_current_status =='5'){
-                         $key_ = "live_counsellor_assign";
-                         $body_ = 'Your chat with The Able Mind is now active';
-                        FcmCaredentials::sendNotificationtoUser($getLiveChats->user_id,$getLiveChats->counsellor_id,$key_,$body_);
-                    }
-                   
+                if(!empty($getLiveChats)) {                    
 
 
                     $userData = User::where('id',$getLiveChats->user_id)->where('status','0')->first();
@@ -363,17 +334,26 @@ class CounselorCurrentCasesController extends Controller
                         ChatMessages::where('session_id', $getLiveChats->session_id)->update(['read_status' => 1]); 
                     }
 
-                    
-                    $ChatAudit11 = array();
-                    $ChatAudit11['session_id'] = $sessionId;
-                    $ChatAudit11['chat_status_old'] = $getLiveChats->chat_current_status;
-                    $ChatAudit11['chat_status_new'] = "3";
-                    $ChatAudit11['changed_by'] = $sessionCounselorid;
-                    ChatAudit::create($ChatAudit11);
+                    if($getLiveChats->chat_current_status == '5'){
+                         $key_ = "live_counsellor_assign";
+                         $body_ = 'Your chat with The Able Mind is now active';
+                        FcmCaredentials::sendNotificationtoUser($getLiveChats->user_id,$getLiveChats->counsellor_id,$key_,$body_);
+                        ChatSessions::where('session_id', $sessionId)->update(['escalated_status' => 2]);
 
-                    ChatSessions::where('session_id', $sessionId)->update(['chat_current_status' => 3]);
 
-                    return view('admin.chatboat.livechat',compact('getLiveChats','liveChats','userData','chat_historylastThree'));       
+                    } else {
+                        $ChatAudit11 = array();
+                        $ChatAudit11['session_id'] = $sessionId;
+                        $ChatAudit11['chat_status_old'] = $getLiveChats->chat_current_status;
+                        $ChatAudit11['chat_status_new'] = "3";
+                        $ChatAudit11['changed_by'] = $sessionCounselorid;
+                        ChatAudit::create($ChatAudit11);
+                        ChatSessions::where('session_id', $sessionId)->update(['chat_current_status' => 3]);
+
+                       
+                    }
+                     return view('admin.chatboat.livechat',compact('getLiveChats','liveChats','userData','chat_historylastThree')); 
+                          
                 } else {
 
                     return redirect()->route('admin.counselorcurrentcases.index')->with('error','Already Close This Chat');  
@@ -634,9 +614,7 @@ class CounselorCurrentCasesController extends Controller
             $categoryId = request()->get('category_id');
             $session_id = request()->get('session_id');
 
-            $key = "live_counsellor_chat_start";
-            $body = 'Your chat with The Able Mind is now active';
-            FcmCaredentials::sendNotificationtoUser($user_id,$categoryId,$key,$body);
+            
 
             $output = ['success' => true,
                         'data' => '',
@@ -646,12 +624,20 @@ class CounselorCurrentCasesController extends Controller
             $sessionCounselorid = Auth::user()->id;
             $ChatSessionsdata = ChatSessions::where('session_id',$session_id)->first();
 
-            
             $data['timer_status'] = '2';
             $data['timer_start_time'] = date("H:i:s");
-            $data['chat_current_status'] = "4";
+            if($ChatSessionsdata->chat_current_status != 5){
+
+                $key = "live_counsellor_chat_start";
+                $body = 'Your chat with The Able Mind is now active';
+                FcmCaredentials::sendNotificationtoUser($user_id,$categoryId,$key,$body);
+
+                $data['chat_current_status'] = "4";            
+                
+                 
+            }
             ChatSessions::where('session_id', $session_id)->update($data);
-            
+
             $ChatAudit11 = array();
             $ChatAudit11['session_id'] = $session_id;
             $ChatAudit11['chat_status_old'] = $ChatSessionsdata->chat_current_status;
@@ -706,13 +692,11 @@ class CounselorCurrentCasesController extends Controller
 
             $key = "live_chat_typing_start";
             $body = 'Counsellor typing start';
-            FcmCaredentials::sendNotificationtoUserTyping($userId,$categoryId,$key,$body);
-
-
+            $responce = FcmCaredentials::sendNotificationtoUserTyping($userId,$categoryId,$key,$body);
 
             $output = ['success' => true,
                         'data' => '',
-                        'msg' => __("added_success")
+                        'msg' => $responce
                     ];
 
             return $output;
@@ -737,6 +721,25 @@ class CounselorCurrentCasesController extends Controller
             return $output;
         }
 
+        public function live_chat_close_notification(Request $request) {
+            
+            $session_id = request()->get('session_id');
+            $userId = request()->get('user_id');
+
+            $sessionCounselorid = Auth::user()->id;
+           
+
+            $key = "live_chat_end_user";
+            $body = 'Your conversation with The Able Mind has been closed';
+            $notification = FcmCaredentials::sendNotificationToUserChatClose($userId,$session_id,$key,$body);
+
+            $output = ['success' => true,
+                        'data' => '',
+                        'msg' =>$notification
+                    ];
+
+            return $output;
+        }
 
         public function counsellor_timer_time_send(Request $request) {
             
@@ -764,17 +767,19 @@ class CounselorCurrentCasesController extends Controller
             
             
             $userId = request()->get('user_id');
+            $session_id = request()->get('session_id');
+
             $sessionCounselorid = Auth::user()->id;
 
             $counselorCategoryUsers = ResumeChat::where('user_id',$userId)
-                                               ->where('counsellor_id',$sessionCounselorid)
+                                               ->where('session_id',$session_id)
                                                ->whereNull('deleted_at')
                                                ->first();
 
             if(!empty($counselorCategoryUsers)){
 
                 ResumeChat::where('user_id',$userId)
-                            ->where('counsellor_id',$sessionCounselorid)
+                            ->where('session_id',$session_id)
                             ->whereNull('deleted_at')
                             ->delete();
 
@@ -1098,6 +1103,8 @@ class CounselorCurrentCasesController extends Controller
                     $ChatAudit['chat_status_new'] = "6";
                 } else {
                     $escalated['chat_current_status'] = '5';
+                    $escalated['timer_start_time'] = null;
+                    $escalated['timer_status'] = null;
                     $ChatAudit['chat_status_new'] = "5";
                 }
 

@@ -82,7 +82,7 @@
                     <a class="nav-link nav-dropdown-toggle" href="#">
                         <i class="fa-fw nav-icon fas fa-user-tie"></i>
                         <p>
-                            Troopers togther
+                            Troopers Together
                             <i class="right fa fa-fw fa-angle-left nav-icon"></i>
                         </p>
                     </a>
@@ -93,7 +93,7 @@
                                 <i class="fa-fw nav-icon fas fa-user-tie">
                                 </i>
                                 <p>
-                                    create sessions
+                                    Create Sessions
                                 </p>
                             </a>
                         </li>
@@ -101,13 +101,13 @@
                         <li class="nav-item">
                             <a href="{{ route("troopers_togther_view") }}" class="nav-link">
                                 <i class="fa-fw nav-icon fas fa-user-tie"></i>
-                                <p>view sessions</p>
+                                <p>View Sessions</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route("history") }}" class="nav-link">
                                 <i class="fa-fw nav-icon fas fa-user-tie"></i>
-                                <p>Sessions history</p>
+                                <p>Sessions History</p>
                             </a>
                         </li>
                         @endcan
@@ -200,7 +200,7 @@
                         <li class="nav-item">
                             <a href="{{ route("admin-to-user") }}" class="nav-link">
                                 <i class="fa-fw nav-icon fas fa-user-tie"></i>
-                                <p>Notification</p>
+                                <p>Push Notification</p>
                             </a>
                         </li>
                         @endcan

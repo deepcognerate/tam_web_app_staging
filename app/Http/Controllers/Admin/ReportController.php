@@ -198,10 +198,63 @@ class ReportController extends Controller
 
     }
 
-    
+        public function pastChatCounselorReport(Request $request){
+
+        $sessionCounselorid = Auth::user()->id;
+
+        $fromdate = $request->input('fromdate');  
+        $todate = $request->input('todate');   
+        $chattype = $request->input('chattype');  
+
+            $CounsellorCategories = CounsellorCategories::where('counsellor_id',$sessionCounselorid)
+                                                    ->whereNull('deleted_at')
+                                                    ->get();
+
+            $chatHistorys = ChatSessions::with('getUser','getCategory','getUserCounselor');
+
+            $chatHistorys->where('chat_current_status','6');
+            $chatHistorys->where('counsellor_id',$sessionCounselorid);
+            $chatHistorys->whereNull('assign_by');
+
+                if(!empty($chattype)){
+                    $chatHistorys->where('chat_type',$chattype);
+                }               
+
+                if(!empty($fromdate) AND !empty($todate)){
+                    $chatHistorys->whereDate('created_at','>=',$fromdate);
+                    $chatHistorys->whereDate('created_at','<=',$todate);
+                }
+
+           
+        $data = $chatHistorys->get();
 
 
-    public function pastChatCounselorReport(Request $request){
+            $chatHistorysAssign_by = ChatSessions::with('getUser','getCategory','getCounselorAssignBy');
+
+            $chatHistorysAssign_by->where('chat_current_status','6');
+            $chatHistorysAssign_by->where('assign_by',$sessionCounselorid);
+
+                if(!empty($chattype)){
+                    $chatHistorysAssign_by->where('chat_type',$chattype);
+                }               
+
+                if(!empty($fromdate) AND !empty($todate)){
+                    $chatHistorysAssign_by->whereDate('created_at','>=',$fromdate);
+                    $chatHistorysAssign_by->whereDate('created_at','<=',$todate);
+                }
+           
+        $chatHistorysAssign_by = $chatHistorysAssign_by->get();
+       
+        $output['liveHistorys'] = $data;
+        $output['liveHistorysAssign_by'] = $chatHistorysAssign_by;
+
+        return $output;
+    }
+
+
+
+
+    public function pastChatCounselorReport123(Request $request){
          $sessionCounselorid = Auth::user()->id;
          $counsellors = User::where('id',$sessionCounselorid)->where('status','2')->whereNull('deleted_at')->first();
          $fromdate = $request->input('fromdate');  
@@ -571,12 +624,25 @@ class ReportController extends Controller
 
         $sessionCounselorid = Auth::user()->id;
         $categorys = Category::get();
+
         $liveEscalated = ChatSessions::with('getUser','getCategory','getUserCounselor')
                                         ->where('chat_current_status','5') 
                                         ->where('assign_by',$sessionCounselorid)
                                         ->get();
-        
+
+        $live = ChatSessions::with('getUser','getCategory','getUserCounselor')
+                                        ->where('counsellor_id',$sessionCounselorid)
+                                        ->where(function($qq){
+                                                $qq->orWhere('chat_current_status','2');
+                                                $qq->orWhere('chat_current_status','3');
+                                                $qq->orWhere('chat_current_status','4');
+                                                $qq->orWhere('chat_current_status','5');
+
+                                            })
+                                        ->get();
+
         $output['liveEscalated'] = $liveEscalated;
+        $output['liveChat'] = $live;
         $output['categorys'] = $categorys;
         
         return $output;

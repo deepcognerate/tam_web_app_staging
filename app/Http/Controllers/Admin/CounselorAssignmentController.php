@@ -35,7 +35,9 @@ use Illuminate\Support\Facades\Log;
 
 class CounselorAssignmentController extends Controller
 {
-    
+    public function FcmServerKey(){
+             return 'AAAA0yAqXOY:APA91bFx-9he2tSBX8bwjlnBHik0i-f_NhgsgaElzQQ0xDbefryv9G2dwAj0J-6lBhcMt14PWhIb0AfHXvaaW-V2NkE2rgTeLXDf5pbpAqvmmvvoVpYo73GfPsk4tYQo26s0c6p1pjLY';
+    }
 
 
     public function index(Request $request)

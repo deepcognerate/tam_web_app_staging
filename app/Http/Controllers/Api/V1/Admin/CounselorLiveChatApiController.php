@@ -282,11 +282,11 @@ class CounselorLiveChatApiController extends Controller
                                       
                     $chats = ChatMessages::where('session_id',$checkCounselorAssignment->session_id)->get();
 
-                    $response = ['response' => $chats,'notification' => $data,'message'=> 'message send successfully.....!','status'=>true];
+                    $response = ['response' => $chats,'notification' => $data,'message'=> 'message send successfully.....!','imgUrl'=>url('/public/chatAttachment/').'/', 'status'=>true];
                 } else {
                     $chats = [];
                     $data = [];
-                    $response = ['response' => $chats,'notification' => $data,'message'=> 'failed','status'=>false,'errors'=>'Live chat session not create'];
+                    $response = ['response' => $chats,'notification' => $data,'message'=> 'failed','status'=>false,'errors'=>'Live chat session not create','imgUrl'=>url('/public/chatAttachment/').'/'];
                 }
                 DB::commit();
                 return response($response, 200);
@@ -596,9 +596,10 @@ class CounselorLiveChatApiController extends Controller
                     $allWaitingUser = ChatSessions::where('category_id',$request->category_id)
                                                 ->where('chat_type','1')
                                                 ->where('chat_current_status','1')
+                                                ->where('user_id','!=',$request->user_id)
                                                 ->get();
 
-                    if(!empty($allWaitingUser)){
+                    if(!empty($allWaitingUser) AND count($allWaitingUser) >=1){
 
                         $key = "live_counsellor_assign";
                         $body = 'Your queue number has been updated';
@@ -647,7 +648,8 @@ class CounselorLiveChatApiController extends Controller
                                                 $qq->orWhere('chat_current_status','2');
                                                 $qq->orWhere('chat_current_status','3');
                                                 $qq->orWhere('chat_current_status','4');
-                                            })->first();
+                                            })
+                                            ->first();
                
                 if(!empty($checkWattingList)){
 
@@ -707,10 +709,12 @@ class CounselorLiveChatApiController extends Controller
                         $allWaitingUser = ChatSessions::where('category_id',$request->category_id)
                                                         ->where('chat_type','1')
                                                         ->where('chat_current_status','1')
+                                                        ->where('user_id','!=',$request->user_id)
                                                         ->get();
 
+                    
                         // All waiting user notification send
-                        if(!empty($allWaitingUser)){
+                        if(!empty($allWaitingUser) AND count($allWaitingUser) >=1){
 
                             $key = "live_counsellor_assign";
                             $body = 'Your queue number has been updated';
@@ -787,20 +791,22 @@ class CounselorLiveChatApiController extends Controller
 
                 $chat['user_id'] = $request->user_id;
                 $chat['status'] = $request->status;
-                $chat['counsellor_id'] = $request->counsellor_id;
+                $chat['session_id'] = $request->session_id;
                 $chat['created_at'] = date("Y-m-d H:i:s");
                 $chat['updated_at'] = date("Y-m-d H:i:s");
                 $data = ResumeChat::create($chat);
 
                 if(!empty($data)){
                     if($request->status == 'Yes'){
-                        $chatResume = ChatSessions::where('counsellor_id',$request->counsellor_id)
+                        $chatResume = ChatSessions::where('session_id',$request->session_id)
                                                     ->where('chat_type','1')
                                                     ->where('user_id',$request->user_id)
-                                                    ->where('chat_current_status','!=','7')
-                                                    ->where('chat_current_status','!=','8')
-                                                    ->where('chat_current_status','!=','6') 
-                                                    ->where('chat_current_status','!=','1')
+                                                    ->where(function($qq){
+                                                        $qq->orWhere('chat_current_status','2');
+                                                        $qq->orWhere('chat_current_status','3');
+                                                        $qq->orWhere('chat_current_status','4');
+                                                        $qq->orWhere('chat_current_status','5');
+                                                    })
                                                     ->first();
 
                        

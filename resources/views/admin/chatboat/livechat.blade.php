@@ -112,7 +112,7 @@
 <div class="chat-box-header">
 
 <div class="profile_img">
-  <!-- <img class="img_circle" src="http://askavenue.com/img/17.jpg" alt="Jesse Tino"> -->
+  <img class="img_circle" src="{{asset('public/assets/TAMlogo.png')}}" style="border: 1px solid #f9ae3b;" alt="Jesse Tino">
   <span class="availability_status online"></span>
 </div>
 <p class="chat_p">@if($userData) {{ $userData->name }} @endif</p>
@@ -327,7 +327,12 @@
 
 
 
-    <a ><button class="btn btn-chat-footer btn-sm" id="feedbackBtn">Close Chat</button></a>
+    
+    <a>
+      <button class="btn btn-chat-footer btn-sm" id="feedbackBtn"  style="display:none;">Close Chat</button>
+      <button class="btn btn-chat-footer btn-sm" onclick="closechatLive()">Close Chat</button>
+    </a>
+
     <!-- The Modal -->
     <div id="myModal1" class="modal1">
       <!-- Modal content -->
@@ -468,18 +473,18 @@
     var msgcount = 2;
 
     var firebaseConfig = {
-        // apiKey: 'AIzaSyBVwfEvl5Gtmi1u6Tq5q0pCDbfPugenQYE',
-        // authDomain: 'tam-app-dev.firebaseapp.com',
-        // databaseURL: 'https://auth-db206.hstgr.io/index.php?db=u789638131_tam_dev_1_5',
-        // projectId: 'tam-app-dev',
-        // storageBucket: 'tam-app-dev.appspot.com',
-        // messagingSenderId: '906777746662',
-        // appId: '1:906777746662:web:e4d6e511e2a1a4245d2f27',
-        // measurementId: 'G-BEFLVMNWLB',
+        /* apiKey: 'AIzaSyBVwfEvl5Gtmi1u6Tq5q0pCDbfPugenQYE',
+        authDomain: 'tam-app-dev.firebaseapp.com',
+        databaseURL: 'https://auth-db206.hstgr.io/index.php?db=u789638131_tam_dev_1_5',
+        projectId: 'tam-app-dev',
+        storageBucket: 'tam-app-dev.appspot.com',
+        messagingSenderId: '906777746662',
+        appId: '1:906777746662:web:e4d6e511e2a1a4245d2f27',
+        measurementId: 'G-BEFLVMNWLB', */
 
         apiKey: "AIzaSyAADXQHgQTNgBFZyCjDsV3W6Z7oc9B1B2g",
         authDomain: "tam-app-staging.firebaseapp.com",
-        databaseURL: 'https://auth-db206.hstgr.io/index.php?db=u789638131_tam_destress',
+        databaseURL: 'https://counsellor.theablemind.com/phpmyadmin/index.php?route=/database/structure&db=tam_web_staging',
         projectId: "tam-app-staging",
         storageBucket: "tam-app-staging.appspot.com",
         messagingSenderId: "991731337312",
@@ -635,6 +640,19 @@
          });       
     }
 
+        function closechatLive(){
+          var user_id = $('#user_id').val();
+          var session_id = $('#session_id').val();
+          document.getElementById('feedbackBtn').click();
+
+        $.ajax({
+            url: "{{url('admin/chat-close-notification')}}",
+            method:"GET",
+            data:{user_id:user_id,session_id:session_id},        
+            success: function(dataResult){
+            }
+        });
+      }
 
     // Live msg check whiteSpace 
         function checkmsglive(obj){
@@ -770,6 +788,39 @@ $(window).bind('beforeunload', function(e) {
   }   
 });
 
+
 </script>
+
+<?php if(!empty($getLiveChats->chat_current_status) AND $getLiveChats->chat_current_status == 5) { ?>
+<script>
+      $(document).ready(function(){  
+        adminUserCheckChatResume();      
+    });
+
+    function adminUserCheckChatResume(){
+     
+        var user_id = $('#user_id').val();
+        var category_id = $('#category_iddd').val();
+        var session_id = $('#session_id').val();
+        var urlStartChat = $('#urlChatStart').val();  
+         $.ajax({
+                 url: "{{url('admin/admin-user-check-chat-resume')}}",
+                 method:"GET",
+                 data:{user_id:user_id,category_id:category_id,session_id:session_id},        
+                 success: function(result){
+                   if (result.success == true) {
+                      if (result.status == 'Yes') {
+                        liveChatStart('liveChatButtonStart','appLiveTimershow');
+                      } else {
+                        alert('User Decline Chat');
+                      }
+                   } else {
+                    setTimeout(adminUserCheckChatResume, 1000);
+                   }
+                }
+        });
+    }
+</script>
+<?php } ?>
 <!-- End refresh  -->
 @endsection

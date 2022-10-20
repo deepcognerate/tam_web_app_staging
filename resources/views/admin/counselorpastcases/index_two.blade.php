@@ -127,16 +127,16 @@
             data:{fromdate:fromdate,todate:todate,chattype:chattype},        
             success: function(result){
                 table2.clear(); 
-                $.each(result["chatHistorys"], function (idx, obj) {
+                $.each(result["liveHistorys"], function (idx, obj) {
 
-                    var assignButton = '<a href="{{ route('admin.past-chat-history.show','') }}/'+result["chatHistorys"][idx]["session_id"]+'" class="iconeye btn btn-gradient-primary btn-rounded btn-icon"><i class="fa fa-eye" aria-hidden="true"></i></a>'
+                    var assignButton = '<a href="{{ route('admin.past-chat-history.show','') }}/'+result["liveHistorys"][idx]["session_id"]+'" class="iconeye btn btn-gradient-primary btn-rounded btn-icon"><i class="fa fa-eye" aria-hidden="true"></i></a>'
 
 
-                    var date = dateFormat(result["chatHistorys"][idx]["created_at"], 'MM-dd-yyyy');
+                    var date = dateFormat(result["liveHistorys"][idx]["created_at"], 'MM-dd-yyyy');
 
                     var ratingYellow = '';
-                    if(result["chatHistorys"][idx]["chat_type"] == 1){
-                        var reviews  = result["chatHistorys"][idx]["feedback_star_reviews"];
+                    if(result["liveHistorys"][idx]["chat_type"] == 1){
+                        var reviews  = result["liveHistorys"][idx]["feedback_star_reviews"];
                         
                           if(reviews >='1'){
                                 for (let i = 1; i < 6; i++) {
@@ -156,21 +156,67 @@
                     }
 
                     table2.table().rows.add([[idx+1,date,
-                        result["chatHistorys"][idx]["get_user"]["name"],
-                        result["chatHistorys"][idx]["get_user"]["age"],
-                        result["chatHistorys"][idx]["get_user"]["gender"],
-                        result["chatHistorys"][idx]["get_category"]["category_name"],
+                        result["liveHistorys"][idx]["get_user"]["name"],
+                        result["liveHistorys"][idx]["get_user"]["age"],
+                        result["liveHistorys"][idx]["get_user"]["gender"],
+                        result["liveHistorys"][idx]["get_category"]["category_name"],
                         chatType,
-                        result["chatHistorys"][idx]["close_reason"],
-                        result["chatHistorys"][idx]["close_remark"],
+                        result["liveHistorys"][idx]["close_reason"],
+                        result["liveHistorys"][idx]["close_remark"],
 
-                        result["chatHistorys"][idx]["close_issue_code"],
+                        result["liveHistorys"][idx]["close_issue_code"],
                         
                         ratingYellow,
-                        result["chatHistorys"][idx]["feedback_comment"],
+                        result["liveHistorys"][idx]["feedback_comment"],
                         assignButton]]);                            
 
-                });                       
+                });  
+
+                 $.each(result["liveHistorysAssign_by"], function (idx, obj) {
+
+                    var assignButton = '<a href="{{ route('admin.past-chat-history.show','') }}/'+result["liveHistorysAssign_by"][idx]["session_id"]+'" class="iconeye btn btn-gradient-primary btn-rounded btn-icon"><i class="fa fa-eye" aria-hidden="true"></i></a>'
+
+
+                    var date = dateFormat(result["liveHistorysAssign_by"][idx]["created_at"], 'MM-dd-yyyy');
+
+                    var ratingYellow = '';
+                    if(result["liveHistorysAssign_by"][idx]["chat_type"] == 1){
+                        var reviews  = result["liveHistorysAssign_by"][idx]["feedback_star_reviews"];
+                        
+                          if(reviews >='1'){
+                                for (let i = 1; i < 6; i++) {
+                                    if(reviews >= i ){
+                                        ratingYellow += '<span class="fa fa-star" style="color: orange;"></span>';
+                                    } else {
+                                        ratingYellow += '<span class="fa fa-star" ></span>';
+                                    }
+                                    
+                                }
+                          } else {
+                            ratingYellow = 'NA';
+                          }
+                        var chatType = "Live";
+                    } else {
+                        var chatType = "Async";
+                    }
+
+                    table2.table().rows.add([[idx+1,date,
+                        result["liveHistorysAssign_by"][idx]["get_user"]["name"],
+                        result["liveHistorysAssign_by"][idx]["get_user"]["age"],
+                        result["liveHistorysAssign_by"][idx]["get_user"]["gender"],
+                        result["liveHistorysAssign_by"][idx]["get_category"]["category_name"],
+                        chatType,
+                        result["liveHistorysAssign_by"][idx]["close_reason"],
+                        result["liveHistorysAssign_by"][idx]["close_remark"],
+
+                        result["liveHistorysAssign_by"][idx]["close_issue_code"],
+                        
+                        ratingYellow,
+                        result["liveHistorysAssign_by"][idx]["feedback_comment"],
+                        assignButton]]);                            
+
+                });  
+                                     
                 table2.draw(false);                    
             }
         });
@@ -192,7 +238,7 @@
                 table3.clear(); 
                 $.each(result["chatHistorysAsync"], function (idx, obj) {
 
-                    var assignButton = '<a href="{{ route('admin.past-chat-history.showAsync','') }}/'+result["chatHistorysAsync"][idx]["session_id"]+'" class="iconeye btn btn-gradient-primary btn-rounded btn-icon"><i class="fa fa-eye" aria-hidden="true"></i></a>'
+                    var assignButton = '<a href="{{ route('admin.past-chat-history-async.showAsync','') }}/'+result["chatHistorysAsync"][idx]["session_id"]+'" class="iconeye btn btn-gradient-primary btn-rounded btn-icon"><i class="fa fa-eye" aria-hidden="true"></i></a>'
 
 
                     var date = dateFormat(result["chatHistorysAsync"][idx]["created_at"], 'MM-dd-yyyy');

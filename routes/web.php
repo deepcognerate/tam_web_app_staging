@@ -149,6 +149,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
 
     Route::get('live-chat-typing-stop', 'CounselorCurrentCasesController@live_chat_typing_stop')->name('live-chat-typing-stop.live_chat_typing_stop');
 
+    Route::get('chat-close-notification', 'CounselorCurrentCasesController@live_chat_close_notification')->name('lichat-close-notification.live_chat_close_notification');
+
     Route::get('counsellor-timer-time-send', 'CounselorCurrentCasesController@counsellor_timer_time_send')->name('counsellor-timer-time-send.counsellor_timer_time_send');
 
     Route::get('admin-user-check-chat-resume', 'CounselorCurrentCasesController@adminUserCheckChatResume')->name('admin-user-check-chat-resume.adminUserCheckChatResume');

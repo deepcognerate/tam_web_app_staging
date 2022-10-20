@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\FcmToken;
 use Gate;
 use Auth;
-use App\Models\FcmCaredentials;
 use Symfony\Component\HttpFoundation\Response;
 
 class NotificationApiController extends Controller
@@ -51,7 +50,7 @@ class NotificationApiController extends Controller
         $url = 'https://fcm.googleapis.com/fcm/send';
         $FcmToken = FcmToken::whereNotNull('fcm_token')->pluck('fcm_token')->all();
           
-        $serverKey = FcmCaredentials::fcmKey();
+        $serverKey = env('AAAA0yAqXOY:APA91bFx-9he2tSBX8bwjlnBHik0i-f_NhgsgaElzQQ0xDbefryv9G2dwAj0J-6lBhcMt14PWhIb0AfHXvaaW-V2NkE2rgTeLXDf5pbpAqvmmvvoVpYo73GfPsk4tYQo26s0c6p1pjLY');
   
         $data = [
             "registration_ids" => $FcmToken,

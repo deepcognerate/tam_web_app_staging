@@ -23,7 +23,7 @@
 <div class="chat-box">
   <div class="chat-box-header">
     <div class="profile_img">
-    <p> @if(!empty($counselorAssignToUsers->getUser->name)) {{ $counselorAssignToUsers->getUser->name }} @else  @endif</p>
+    <p> @if(!empty($user_details->name)) {{ $user_details->name }} @else  @endif</p>
     
           </div><span id="app"></span>
             </div>
@@ -99,14 +99,16 @@
             <form id="chatAjax_ids" method="POST" action="{{ route("admin.counselor-chat.chat") }}" enctype="multipart/form-data">
             @csrf
                 <input class="form-control" type="text" autocomplete="off" name="message" oninput="checkmsglive(this)"  id="chat-input" placeholder="Send a message..." required>
-                <input class="form-control" type="hidden" name="counselor_id" id="counselor_id" value="{{ $counselorAssignToUsers->counselor_id }}">
-                <input class="form-control" type="hidden" id="user_id"  name="user_id" value="{{ $counselorAssignToUsers->user_id }}">
-                <input class="form-control" type="hidden" name="category_id" id="category_id_" value="{{ $counselorAssignToUsers->category_id }}">
+                <input class="form-control" type="hidden" name="counselor_id" id="counselor_id" value="{{ $getchats->counselor_id }}">
+                <input class="form-control" type="hidden" id="user_id"  name="user_id" value="{{ $getchats->user_id }}">
+                <input class="form-control" type="hidden" name="category_id" id="category_id_" value="{{ $getchats->category_id }}">
                 
-                <input type="hidden" id="urlUpdatechat" value='{{ route("admin.counselor-chat-update-chat.update_chat_ajax",$counselorAssignToUsers->user_id ) }}'>
+                <input type="hidden" id="urlUpdatechat" value='{{ route("admin.counselor-chat-update-chat.update_chat_ajax",$getchats->user_id ) }}'>
 
                 <a class="btn attachment" onclick="imgcheck(this,'attachmentids')" ><i class="mdi mdi-paperclip"></i></a>
                   <input type="file" name="file" id="attachmentids" style="display: none;" accept=".jpg, .png, .jpeg, .gif, .bmp, .pdf, .tif, .tiff|image/*">
+
+                  <input type="hidden" name="session_id" id="session_id" value="@if(!empty($getchats->session_id)){{ $getchats->session_id }}@endif">
 
                 <!-- <button class="btn attachment"><i class="mdi mdi-paperclip"></i></button> -->
                 <!-- <a class="btn emoji"><i class="mdi mdi-emoticon"></i></a> -->
@@ -264,18 +266,18 @@
 <script src="https://www.gstatic.com/firebasejs/8.3.2/firebase.js"></script>
 <script>
     var firebaseConfig = {
-        apiKey: 'AIzaSyBVwfEvl5Gtmi1u6Tq5q0pCDbfPugenQYE',
-        authDomain: 'tam-app-dev.firebaseapp.com',
-        databaseURL: 'https://auth-db582.hstgr.io/index.php?db=u789638131_tam_dev_1_5',
-        projectId: 'tam-app-dev',
-        storageBucket: 'tam-app-dev.appspot.com',
-        messagingSenderId: '906777746662',
-        appId: '1:906777746662:web:e4d6e511e2a1a4245d2f27',
-        measurementId: 'G-BEFLVMNWLB',
+        // apiKey: 'AIzaSyBVwfEvl5Gtmi1u6Tq5q0pCDbfPugenQYE',
+        // authDomain: 'tam-app-dev.firebaseapp.com',
+        // databaseURL: 'https://auth-db582.hstgr.io/index.php?db=u789638131_tam_dev_1_5',
+        // projectId: 'tam-app-dev',
+        // storageBucket: 'tam-app-dev.appspot.com',
+        // messagingSenderId: '906777746662',
+        // appId: '1:906777746662:web:e4d6e511e2a1a4245d2f27',
+        // measurementId: 'G-BEFLVMNWLB',
 
         apiKey: "AIzaSyAADXQHgQTNgBFZyCjDsV3W6Z7oc9B1B2g",
         authDomain: "tam-app-staging.firebaseapp.com",
-        databaseURL: 'https://auth-db206.hstgr.io/index.php?db=u789638131_tam_destress',
+        databaseURL: 'https://counsellor.theablemind.com/phpmyadmin/index.php?route=/database/structure&db=tam_web_staging',
         projectId: "tam-app-staging",
         storageBucket: "tam-app-staging.appspot.com",
         messagingSenderId: "991731337312",
@@ -345,11 +347,12 @@
         var counselor_id = $('#counselor_id').val();
         var user_id = $('#user_id').val();
         var urlUpdate = $('#urlUpdatechat').val();
+        var session_id = $('#session_id').val();
         console.log(counselor_id);
         $.ajax({
              url: urlUpdate,
              method:"GET",
-             data:{user_id:user_id,counselor_id:counselor_id},        
+             data:{user_id:user_id,counselor_id:counselor_id,session_id:session_id},        
              success: function(dataResult){
 
               if (dataResult.success == true) {
@@ -382,11 +385,12 @@
       var category_id = $('#category_id_').val();
       var selectIssueCodeId = $('#selectIssueCodeId').val();
       var closeChatReasonId = $('#closeChatReasonId').val();
+      var session_id = $('#session_id').val();
 
       $.ajax({
             url: "{{url('admin/close-chat-async-admin')}}",
             method:"GET",
-            data:{user_id:user_id,remark:remark,category_id:category_id,selectIssueCodeId:selectIssueCodeId,closeChatReasonId:closeChatReasonId},        
+            data:{session_id:session_id,user_id:user_id,remark:remark,category_id:category_id,selectIssueCodeId:selectIssueCodeId,closeChatReasonId:closeChatReasonId},        
             success: function(data) {
               window.location.href ="{{ route('admin.counselors.mychatAdmin') }}";
             }

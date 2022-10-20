@@ -112,14 +112,18 @@
 <div class="chat-box-header">
 
 <div class="profile_img">
-  <img class="img_circle" src="https://washering.com/tamtest/public/assets/TAMlogo.png" style="border: 1px solid #f9ae3b;" alt="Jesse Tino">
+  <img class="img_circle" src="{{asset('public/assets/TAMlogo.png')}}" style="border: 1px solid #f9ae3b;" alt="Jesse Tino">
   <span class="availability_status online"></span>
 </div>
 <p class="chat_p" style="margin-left: 41px;
     margin-top: -4px;">@if($userData) {{ $userData->name }} @endif</p>
 <span id="appLiveTimershow"></span>
 <div class="text-right ml-auto" >
-  <a class="btn start_btn mt-2 button" style="display:none;" id="liveChatButtonStart" onclick="liveChatStart('liveChatButtonStart','appLiveTimershow')">Start Chat</a>
+ <!--  <a class="btn start_btn mt-2 button" style="display:none;" id="liveChatButtonStart" onclick="liveChatStart('liveChatButtonStart','appLiveTimershow')">Start Chat</a> -->
+
+  @if(!empty($getLiveChats->chat_current_status) AND $getLiveChats->chat_current_status != 5)
+      <a class="btn start_btn mt-2 button" id="liveChatButtonStart" onclick="liveChatStart('liveChatButtonStart','appLiveTimershow')">Start Chat</a>
+  @endif
   <!-- <a class="btn start_btn mt-2 liveChatButtonStop"  onclick="liveChatStart()">Stop</a> -->
 </div>
 
@@ -206,7 +210,7 @@
 @csrf
 
     <input class="form-control" type="text" autocomplete="off" name="message" id="chat-input" oninput="checkmsglive(this)"  placeholder="Send a message..." minlength="1" maxlength="200" required>
-    <input class="form-control" type="hidden" name="counselor_id"  id="counselor_id" value=" @if(!empty($getLiveChats->counselor_id)) {{ $getLiveChats->counselor_id }} @else @endif">
+    <input class="form-control" type="hidden" name="counselor_id"  id="counselor_id" value=" @if(!empty($getLiveChats->counsellor_id)) {{ $getLiveChats->counsellor_id }} @else @endif">
     <input class="form-control" type="hidden" id="user_id"  name="user_id" value=" @if(!empty($getLiveChats->user_id)) {{ $getLiveChats->user_id }} @else @endif">
     <input class="form-control" type="hidden" name="category_id" id="category_iddd" value=" @if(!empty($getLiveChats->category_id)) {{ $getLiveChats->category_id }} @else @endif">
       
@@ -253,7 +257,9 @@
               </div>
             </div>
           </div>
-    <a><button class="btn btn-chat-footer btn-sm" id="feedbackBtn">Close Chat</button></a>
+    <a>
+      <button class="btn btn-chat-footer btn-sm" id="feedbackBtn"  style="display:none;">Close Chat</button>
+      <button class="btn btn-chat-footer btn-sm" onclick="closechatLive()">Close Chat</button></a>
     <!-- The Modal -->
     <div id="myModal1" class="modal1">
       <!-- Modal content -->
@@ -403,9 +409,10 @@
         // appId: '1:906777746662:web:e4d6e511e2a1a4245d2f27',
         // measurementId: 'G-BEFLVMNWLB',
 
+
         apiKey: "AIzaSyAADXQHgQTNgBFZyCjDsV3W6Z7oc9B1B2g",
         authDomain: "tam-app-staging.firebaseapp.com",
-        databaseURL: 'https://auth-db206.hstgr.io/index.php?db=u789638131_tam_destress',
+        databaseURL: 'https://counsellor.theablemind.com/phpmyadmin/index.php?route=/database/structure&db=tam_web_staging',
         projectId: "tam-app-staging",
         storageBucket: "tam-app-staging.appspot.com",
         messagingSenderId: "991731337312",
@@ -539,8 +546,7 @@ function counsellorTimerValueGet(){
     });
 
     $(document).ready(function(){  
-        resume_chat_by_admin();   
-        adminUserCheckChatResume();      
+        resume_chat_by_admin();         
         setInterval(function(){
             update_chat_history_data();
         }, 2000);
@@ -561,28 +567,6 @@ function counsellorTimerValueGet(){
         });
     }
 
-    function adminUserCheckChatResume(){
-     
-        var user_id = $('#user_id').val();
-        var category_id = $('#category_iddd').val();
-        var urlStartChat = $('#urlChatStart').val();  
-         $.ajax({
-                 url: "{{url('admin/admin-user-check-chat-resume')}}",
-                 method:"GET",
-                 data:{user_id:user_id,category_id:category_id},        
-                 success: function(result){
-                   if (result.success == true) {
-                      if (result.status == 'Yes') {
-                        liveChatStart('liveChatButtonStart','appLiveTimershow');
-                      } else {
-                        alert('User Decline Chat');
-                      }
-                   } else {
-                    setTimeout(adminUserCheckChatResume, 1000);
-                   }
-                }
-        });
-    }
 
      function update_chat_history_data(){
         var counselor_id = $('#counselor_id').val();
@@ -603,7 +587,19 @@ function counsellorTimerValueGet(){
          });       
     }
 
+      function closechatLive(){
+          var user_id = $('#user_id').val();
+          var session_id = $('#session_id').val();
+          document.getElementById('feedbackBtn').click();
 
+        $.ajax({
+            url: "{{url('admin/chat-close-notification')}}",
+            method:"GET",
+            data:{user_id:user_id,session_id:session_id},        
+            success: function(dataResult){
+            }
+        });
+      }
     // Live msg check whiteSpace 
 
         function checkmsglive(obj){
@@ -708,37 +704,68 @@ function counsellorTimerValueGet(){
 <script>
     var ctrlKeyDown = false;
 
-$(document).ready(function(){    
-    $(document).on("keydown", keydown);
-    $(document).on("keyup", keyup);
-});
+    $(document).ready(function(){    
+        $(document).on("keydown", keydown);
+        $(document).on("keyup", keyup);
+    });
 
-function keydown(e) { 
+    function keydown(e) { 
 
-    if ((e.which || e.keyCode) == 116 || ((e.which || e.keyCode) == 82 && ctrlKeyDown)) {
-        // Pressing F5 or Ctrl+R
+        if ((e.which || e.keyCode) == 116 || ((e.which || e.keyCode) == 82 && ctrlKeyDown)) {
+            // Pressing F5 or Ctrl+R
+            e.preventDefault();
+        } else if ((e.which || e.keyCode) == 17) {
+            // Pressing  only Ctrl
+            ctrlKeyDown = true;
+        }
+    };
+
+    function keyup(e){
+        // Key up Ctrl
+        if ((e.which || e.keyCode) == 17) 
+            ctrlKeyDown = false;
+    };
+
+
+    $(window).bind('beforeunload', function(e) { 
+        if(check) {
+        return "Unloading this page may lose data. What do you want to do..."
         e.preventDefault();
-    } else if ((e.which || e.keyCode) == 17) {
-        // Pressing  only Ctrl
-        ctrlKeyDown = true;
-    }
-};
-
-function keyup(e){
-    // Key up Ctrl
-    if ((e.which || e.keyCode) == 17) 
-        ctrlKeyDown = false;
-};
-
-
-$(window).bind('beforeunload', function(e) { 
-    if(check) {
-    return "Unloading this page may lose data. What do you want to do..."
-    e.preventDefault();
-  }   
-});
-
+      }   
+    });
 
 </script>
+
+<?php if(!empty($getLiveChats->chat_current_status) AND $getLiveChats->chat_current_status == 5) { ?>
+<script>
+      $(document).ready(function(){  
+        adminUserCheckChatResume();      
+    });
+
+    function adminUserCheckChatResume(){
+     
+        var user_id = $('#user_id').val();
+        var category_id = $('#category_iddd').val();
+        var session_id = $('#session_id').val();
+        var urlStartChat = $('#urlChatStart').val();  
+         $.ajax({
+                 url: "{{url('admin/admin-user-check-chat-resume')}}",
+                 method:"GET",
+                 data:{user_id:user_id,category_id:category_id,session_id:session_id},        
+                 success: function(result){
+                   if (result.success == true) {
+                      if (result.status == 'Yes') {
+                        liveChatStart('liveChatButtonStart','appLiveTimershow');
+                      } else {
+                        alert('User Decline Chat');
+                      }
+                   } else {
+                    setTimeout(adminUserCheckChatResume, 1000);
+                   }
+                }
+        });
+    }
+</script>
+<?php } ?>
 <!-- End refresh  -->
 @endsection

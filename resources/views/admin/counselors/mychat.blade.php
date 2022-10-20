@@ -370,6 +370,14 @@
             data:{category_id:category_id},        
             success: function(result){
                 table2.clear(); 
+                $.each(result["liveChat"], function (idx, obj) {
+
+
+                    var assignButton = '<a href="{{ route('admin.counselor-live-chat.counselorLiveChat','') }}/'+result["liveChat"][idx]["session_id"]+'" class="round-button_active"><i class="fa fa-play fa-2x"></i></a>'
+                            
+                    table2.table().rows.add([[idx+1,result["liveChat"][idx]["get_user"]["name"],result["liveChat"][idx]["get_user"]["age"],result["liveChat"][idx]["get_user"]["gender"],result["liveChat"][idx]["get_category"]["category_name"],result["liveChat"][idx]["get_user"]["location"],idx+1,result["liveChat"][idx]["escalated_reason"],result["liveChat"][idx]["get_user_counselor"]["name"],assignButton]]);                            
+
+                }); 
                 $.each(result["liveEscalated"], function (idx, obj) {
 
 
@@ -468,7 +476,7 @@
                 tableAsync.clear(); 
                 $.each(result["AsyncEscalated"], function (idx, obj) {
 
-                    var assignButton = '<a class="btn btn-gradient-primary btn-rounded btn-icon submit" onclick="userAssignToAdmin('+result["AsyncEscalated"][idx]["session_id"]+');" style="width: 70px;" title="MySelf">MySelf</a>'
+                    var assignButton = '<a href="{{ route('admin.counselor-assign-user-admin.counselorAssignUserAdmin','') }}/'+result["AsyncEscalated"][idx]["session_id"]+'" class="round-button_active"><i class="fa fa-play fa-2x"></i></a> ';
 
                     
                             

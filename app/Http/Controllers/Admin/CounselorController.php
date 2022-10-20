@@ -330,11 +330,10 @@ class CounselorController extends Controller
                                     $getCounselors->chat_availability = '1';
                                     $getCounselors->save();
 
-                                    $key_ = "live_counsellor_assign";
-                                    $body_ = 'Counsellor is assigned to your Live chat';
-                                    FcmCaredentials::sendNotificationToUserChatClose($userId,$categoryId,$key_,$body_);
+                                    $userId = $checkWattingList->user_id;
+                                        $categoryId = $checkWattingList->category_id;
 
-
+                                        $this->sendNotificationLiveCounsellorToUserAssign($userId,$categoryId,'live_counsellor_assign');
 
                                     // $response = ['response' => $checkCounselor,'message'=> 'User  assignment succsesfully..! ','status'=>true];
                                     // return response($response, 200);
@@ -343,11 +342,10 @@ class CounselorController extends Controller
                                 if(!empty($waitingAssignmentList)){
                                     foreach ($waitingAssignmentList as $waitingKey) {
 
+                                        $userId = $waitingKey->user_id;
+                                        $categoryId =  $waitingKey->category_id;
 
-                                    $key_ = "live_counsellor_assign";
-                                    $body_ = 'Counsellor is assigned to your Live chat';
-                                    FcmCaredentials::sendNotificationToUserChatClose($userId,$categoryId,$key_,$body_);
-
+                                        $this->sendNotificationLiveCounsellorToUserAssign($userId,$categoryId,'live_counsellor_assign');
                                         
                                     }
                                 }
@@ -367,6 +365,61 @@ class CounselorController extends Controller
         
     }
 
-  
+   public function sendNotificationLiveCounsellorToUserAssign($userId, $chatCloseId,$keyMsg)
+        {
+           
+            $url = 'https://fcm.googleapis.com/fcm/send';
+    
+            // $getCounselor =  User::where('category_id',$categoryId)->where('status','2')->get();
+          
+             
+            $FcmToken = FcmToken::where('user_id',$userId)->whereNotNull('fcm_token')->pluck('fcm_token')->all();
+           
+            $serverKey = 'AAAA0yAqXOY:APA91bFx-9he2tSBX8bwjlnBHik0i-f_NhgsgaElzQQ0xDbefryv9G2dwAj0J-6lBhcMt14PWhIb0AfHXvaaW-V2NkE2rgTeLXDf5pbpAqvmmvvoVpYo73GfPsk4tYQo26s0c6p1pjLY';
+      
+            $data = [
+                "registration_ids" => $FcmToken,
+                "notification" => [
+                    "title" =>"New Message",
+                    "body" => "Counsellor is assigned to your Live chat",  
+                ],
+                "data" => [
+                    "key" => $keyMsg,
+                    "chatCloseId" => $chatCloseId,
+                ]
+            ];
+            $encodedData = json_encode($data);
+        
+            $headers = [
+                'Authorization:key=' . $serverKey,
+                'Content-Type: application/json',
+            ];
+        
+            $ch = curl_init();
+          
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+            // Disabling SSL Certificate support temporarly
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);        
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $encodedData);
+    
+            // Execute post
+            $result = curl_exec($ch);
+    
+            if ($result === FALSE) {
+                die('Curl failed: ' . curl_error($ch));
+            }        
+    
+            // Close connection
+            curl_close($ch);
+    
+            // FCM response
+            // dd($result);  
+            return true;      
+        }
     
 }
